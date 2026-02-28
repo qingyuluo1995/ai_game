@@ -435,8 +435,8 @@
         const TANK_SIZE = 30;
         const BULLET_SIZE = 6;
         const PLAYER_SPEED = 3;
-        const ENEMY_SPEED_BASE = 1.5;
-        const BULLET_SPEED = 8;
+        const ENEMY_SPEED_BASE = 0.9; // 降低40% (原来是1.5)
+        const BULLET_SPEED_BASE = 5;
         
         const Direction = { UP: 0, RIGHT: 1, DOWN: 2, LEFT: 3 };
         
@@ -677,7 +677,7 @@
                     enemies.push({
                         x: spawn.x, y: spawn.y, dir: Direction.DOWN, type: enemyType,
                         color: enemyType.color, hp: enemyType.hp, maxHp: enemyType.hp,
-                        speed: enemyType.speed * ENEMY_SPEED_BASE, score: enemyType.score,
+                        speed: enemyType.speed * ENEMY_SPEED_BASE * (1 + level * 0.05), score: enemyType.score,
                         lastShot: 0, shotInterval: 1500 - level * 100, lastMove: 0, moveInterval: 1000
                     });
                 }
@@ -805,8 +805,8 @@
         function updateBullets() {
             bullets = bullets.filter(bullet => {
                 switch(bullet.dir) {
-                    case Direction.UP: bullet.y -= BULLET_SPEED; break; case Direction.DOWN: bullet.y += BULLET_SPEED; break;
-                    case Direction.LEFT: bullet.x -= BULLET_SPEED; break; case Direction.RIGHT: bullet.x += BULLET_SPEED; break;
+                    case Direction.UP: bullet.y -= BULLET_SPEED_BASE * (1 + level * 0.1); break; case Direction.DOWN: bullet.y += BULLET_SPEED_BASE * (1 + level * 0.1); break;
+                    case Direction.LEFT: bullet.x -= BULLET_SPEED_BASE * (1 + level * 0.1); break; case Direction.RIGHT: bullet.x += BULLET_SPEED_BASE * (1 + level * 0.1); break;
                 }
                 if(bullet.x < 0 || bullet.x > CANVAS_WIDTH || bullet.y < 0 || bullet.y > CANVAS_HEIGHT) return false;
                 const bulletRect = { x: bullet.x, y: bullet.y, width: BULLET_SIZE, height: BULLET_SIZE };
