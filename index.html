@@ -238,7 +238,65 @@
             font-size: 0.85rem;
         }
         
-        /* 桌面端图鉴 */
+        /* 横屏提示 */
+        .rotate-hint {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1a1a2e;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .rotate-hint.show {
+            display: flex;
+        }
+        
+        .rotate-hint .phone-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: rotatePhone 2s infinite;
+        }
+        
+        @keyframes rotatePhone {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(90deg); }
+        }
+        
+        .rotate-hint h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+        
+        .rotate-hint p {
+            color: #8892b0;
+            font-size: 1rem;
+        }
+        
+        /* 横屏时隐藏提示 */
+        @media (orientation: landscape) and (max-width: 900px) {
+            .rotate-hint {
+                display: none !important;
+            }
+        }
+        
+        /* 竖屏时显示提示 */
+        @media (orientation: portrait) and (max-width: 600px) {
+            .game-wrapper {
+                display: none;
+            }
+            .rotate-hint.show {
+                display: flex;
+            }
+        }
         @media (min-width: 769px) {
             .game-wrapper {
                 flex-direction: row;
@@ -292,6 +350,13 @@
     </style>
 </head>
 <body>
+    <!-- 横屏提示 -->
+    <div class="rotate-hint" id="rotateHint">
+        <div class="phone-icon">📱</div>
+        <h2>请旋转手机</h2>
+        <p>横屏体验更佳</p>
+    </div>
+    
     <div class="game-wrapper">
         <div class="game-main">
             <div class="game-header">
@@ -1424,8 +1489,27 @@
             animationId = requestAnimationFrame(gameLoop);
         }
         
+        // 检测屏幕方向
+        function checkOrientation() {
+            const rotateHint = document.getElementById('rotateHint');
+            const isPortrait = window.innerHeight > window.innerWidth;
+            const isMobile = window.innerWidth <= 600;
+            
+            if (isMobile && isPortrait) {
+                rotateHint.classList.add('show');
+            } else {
+                rotateHint.classList.remove('show');
+            }
+        }
+        
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', checkOrientation);
+        
         // 启动游戏
-        window.onload = init;
+        window.onload = function() {
+            init();
+            checkOrientation();
+        };
         
         // 防止触摸滚动
         document.addEventListener('touchmove', function(e) {
