@@ -70,6 +70,16 @@
             width: 100%;
         }
         
+        .version {
+            position: absolute;
+            bottom: 5px;
+            right: 10px;
+            font-size: 0.7rem;
+            color: rgba(136, 146, 176, 0.5);
+            pointer-events: none;
+            z-index: 10;
+        }
+        
         #gameCanvas {
             background: #0a0a0a;
             border: 2px solid #667eea;
@@ -371,6 +381,7 @@
             
             <div class="game-area" id="gameArea">
                 <canvas id="gameCanvas" width="600" height="400"></canvas>
+                <div class="version">v3.3</div>
                 
                 <!-- 主菜单 -->
                 <div class="overlay" id="mainMenu">
