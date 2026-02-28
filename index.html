@@ -243,6 +243,17 @@
             box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
         }
         
+        .mobile-toggle-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 2px solid transparent;
+        }
+        
+        .mobile-toggle-btn.active {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a3aa 100%) !important;
+            border-color: #4ecdc4;
+            box-shadow: 0 0 15px rgba(78, 205, 196, 0.5);
+        }
+        
         .high-score {
             margin: 20px 0;
             padding: 15px 30px;
@@ -384,6 +395,7 @@
                     </div>
                     <button class="menu-btn" onclick="startGame()">开始游戏</button>
                     <button class="menu-btn" onclick="showHowToPlay()">游戏说明</button>
+                    <button class="menu-btn mobile-toggle-btn" id="mobileToggleBtn" onclick="toggleMobileMode()">📱 手机模式: 关</button>
                     <p style="margin-top: 20px; color: #8892b0; font-size: 0.9rem;">
                         Made by qingyu ❤️
                     </p>
@@ -591,6 +603,30 @@
         // 显示虚拟键盘
         if(isMobile) {
             document.getElementById('mobileControls').classList.add('active');
+            document.getElementById('mobileToggleBtn').textContent = '📱 手机模式: 开';
+            document.getElementById('mobileToggleBtn').classList.add('active');
+        }
+        
+        // 手动切换手机模式
+        let mobileModeEnabled = isMobile;
+        function toggleMobileMode() {
+            mobileModeEnabled = !mobileModeEnabled;
+            const mobileControls = document.getElementById('mobileControls');
+            const toggleBtn = document.getElementById('mobileToggleBtn');
+            
+            if(mobileModeEnabled) {
+                mobileControls.classList.add('active');
+                toggleBtn.textContent = '📱 手机模式: 开';
+                toggleBtn.classList.add('active');
+                resizeCanvas();
+            } else {
+                mobileControls.classList.remove('active');
+                toggleBtn.textContent = '📱 手机模式: 关';
+                toggleBtn.classList.remove('active');
+                // 恢复画布大小
+                canvas.style.width = '';
+                canvas.style.height = '';
+            }
         }
         
         // 初始化虚拟按键
