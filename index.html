@@ -419,7 +419,7 @@
         </div>
         
         <!-- 桌面端图鉴 -->
-        <div class="legend">
+        <div class="legend" id="legendPanel">
             <h3>📋 图鉴</h3>
             <div class="legend-item"><div class="legend-icon" style="background: #228b22;">🌿</div><span>草地 - 隐身</span></div>
             <div class="legend-item"><div class="legend-icon" style="background: #8b4513;">🧱</div><span>砖墙 - 可破坏</span></div>
@@ -704,6 +704,7 @@
         
         function startGame() {
             document.getElementById('mainMenu').classList.add('hidden');
+            document.getElementById('legendPanel').classList.add('hidden');
             gameState = 'PLAYING';
             resetGame();
         }
@@ -747,6 +748,7 @@
             document.getElementById('pauseMenu').classList.add('hidden');
             document.getElementById('gameOver').classList.add('hidden');
             document.getElementById('mainMenu').classList.remove('hidden');
+            document.getElementById('legendPanel').classList.remove('hidden');
             document.getElementById('highScoreDisplay').textContent = highScore;
         }
         
