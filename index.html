@@ -68,13 +68,13 @@
         .stat-box.lives { color: #ff6b6b; }
         .stat-box.base { color: #4ecdc4; }
         
-        /* 左下角方向键区域 */
+        /* 左下角虚拟摇杆 - 王者荣耀风格 */
         #leftControl {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            width: 200px;
-            height: 200px;
+            bottom: 40px;
+            left: 40px;
+            width: 180px;
+            height: 180px;
             z-index: 20;
             display: none;
         }
@@ -83,49 +83,36 @@
             display: block;
         }
         
-        .joystick {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-        
-        .joystick-bg {
+        .joystick-base {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 175px;
-            height: 175px;
-            background: rgba(255, 255, 255, 0.1);
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.15);
             border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
         }
         
-        .joystick-btn {
+        .joystick-knob {
             position: absolute;
-            width: 75px;
-            height: 75px;
-            background: rgba(102, 126, 234, 0.6);
-            border: 2px solid rgba(255, 255, 255, 0.5);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle at 30% 30%, rgba(102, 126, 234, 0.9), rgba(70, 100, 200, 0.8));
+            border: 3px solid rgba(255, 255, 255, 0.6);
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-            color: #fff;
-            cursor: pointer;
-            transition: transform 0.1s, background 0.1s;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+            transition: none;
+            pointer-events: none;
         }
         
-        .joystick-btn:active, .joystick-btn.pressed {
-            background: rgba(102, 126, 234, 0.9);
-            transform: scale(0.95);
+        .joystick-knob.active {
+            background: radial-gradient(circle at 30% 30%, rgba(120, 150, 255, 1), rgba(90, 120, 220, 0.9));
         }
-        
-        .joystick-btn.up { top: 0; left: 62px; }
-        .joystick-btn.down { bottom: 0; left: 62px; }
-        .joystick-btn.left { top: 62px; left: 0; }
-        .joystick-btn.right { top: 62px; right: 0; }
         
         /* 右下角射击按钮 */
         #rightControl {
@@ -361,15 +348,10 @@
         <!-- 暂停按钮 -->
         <div id="pauseBtn" onclick="pauseGame()">⏸️</div>
         
-        <!-- 左下角方向键 -->
+        <!-- 左下角虚拟摇杆 -->
         <div id="leftControl">
-            <div class="joystick">
-                <div class="joystick-bg"></div>
-                <div class="joystick-btn up" data-key="w">▲</div>
-                <div class="joystick-btn down" data-key="s">▼</div>
-                <div class="joystick-btn left" data-key="a">◀</div>
-                <div class="joystick-btn right" data-key="d">▶</div>
-            </div>
+            <div class="joystick-base" id="joystickBase"></div>
+            <div class="joystick-knob" id="joystickKnob"></div>
         </div>
         
         <!-- 右下角射击 -->
@@ -520,31 +502,126 @@
             canvas.style.height = Math.floor(CANVAS_HEIGHT * scale) + 'px';
         }
         
+        // ============ 摇杆控制 ============
+        let joystickActive = false;
+        let joystickCenter = { x: 0, y: 0 };
+        let joystickRadius = 75; // 底座半径
+        let joystickMaxDist = 45; // 摇杆头最大偏移距离
+        
         function setupControls() {
-            const buttons = document.querySelectorAll('.joystick-btn, .fire-btn');
-            buttons.forEach(btn => {
-                const key = btn.getAttribute('data-key');
-                if(!key) return;
-                
+            const joystickBase = document.getElementById('joystickBase');
+            const joystickKnob = document.getElementById('joystickKnob');
+            const fireBtn = document.querySelector('.fire-btn');
+            
+            // 摇杆事件
+            const joystickStart = (e) => {
+                e.preventDefault();
+                joystickActive = true;
+                joystickKnob.classList.add('active');
+                updateJoystick(e);
+            };
+            
+            const joystickMove = (e) => {
+                if(!joystickActive) return;
+                e.preventDefault();
+                updateJoystick(e);
+            };
+            
+            const joystickEnd = (e) => {
+                if(!joystickActive) return;
+                e.preventDefault();
+                joystickActive = false;
+                joystickKnob.classList.remove('active');
+                // 重置摇杆位置
+                joystickKnob.style.transform = 'translate(-50%, -50%)';
+                // 停止移动
+                keys['w'] = keys['s'] = keys['a'] = keys['d'] = false;
+            };
+            
+            joystickBase.addEventListener('touchstart', joystickStart, { passive: false });
+            joystickBase.addEventListener('touchmove', joystickMove, { passive: false });
+            joystickBase.addEventListener('touchend', joystickEnd, { passive: false });
+            joystickBase.addEventListener('touchcancel', joystickEnd, { passive: false });
+            
+            joystickBase.addEventListener('mousedown', joystickStart);
+            document.addEventListener('mousemove', joystickMove);
+            document.addEventListener('mouseup', joystickEnd);
+            
+            // 射击按钮
+            if(fireBtn) {
                 const startHandler = (e) => {
                     e.preventDefault();
-                    keys[key] = true;
-                    btn.classList.add('pressed');
+                    keys['j'] = true;
+                    fireBtn.classList.add('pressed');
                 };
-                
                 const endHandler = (e) => {
                     e.preventDefault();
-                    keys[key] = false;
-                    btn.classList.remove('pressed');
+                    keys['j'] = false;
+                    fireBtn.classList.remove('pressed');
                 };
                 
-                btn.addEventListener('touchstart', startHandler, { passive: false });
-                btn.addEventListener('touchend', endHandler, { passive: false });
-                btn.addEventListener('touchcancel', endHandler);
-                btn.addEventListener('mousedown', startHandler);
-                btn.addEventListener('mouseup', endHandler);
-                btn.addEventListener('mouseleave', () => { keys[key] = false; btn.classList.remove('pressed'); });
-            });
+                fireBtn.addEventListener('touchstart', startHandler, { passive: false });
+                fireBtn.addEventListener('touchend', endHandler, { passive: false });
+                fireBtn.addEventListener('touchcancel', endHandler);
+                fireBtn.addEventListener('mousedown', startHandler);
+                fireBtn.addEventListener('mouseup', endHandler);
+                fireBtn.addEventListener('mouseleave', () => { keys['j'] = false; fireBtn.classList.remove('pressed'); });
+            }
+        }
+        
+        function updateJoystick(e) {
+            const joystickBase = document.getElementById('joystickBase');
+            const joystickKnob = document.getElementById('joystickKnob');
+            const rect = joystickBase.getBoundingClientRect();
+            
+            // 计算中心点
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            // 获取触摸/鼠标位置
+            let clientX, clientY;
+            if(e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else if(e.changedTouches && e.changedTouches.length > 0) {
+                clientX = e.changedTouches[0].clientX;
+                clientY = e.changedTouches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            
+            // 计算偏移
+            let dx = clientX - centerX;
+            let dy = clientY - centerY;
+            
+            // 计算距离和角度
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx);
+            
+            // 限制最大距离
+            const limitedDist = Math.min(distance, joystickMaxDist);
+            
+            // 计算摇杆头位置
+            const knobX = Math.cos(angle) * limitedDist;
+            const knobY = Math.sin(angle) * limitedDist;
+            
+            // 更新摇杆头位置
+            joystickKnob.style.transform = `translate(calc(-50% + ${knobX}px), calc(-50% + ${knobY}px))`;
+            
+            // 设置方向键（根据角度）
+            const threshold = 0.3; // 移动阈值
+            keys['w'] = keys['s'] = keys['a'] = keys['d'] = false;
+            
+            if(distance > 10) { // 最小触发距离
+                // 上/下
+                if(dy < -threshold * limitedDist) keys['w'] = true;
+                else if(dy > threshold * limitedDist) keys['s'] = true;
+                
+                // 左/右
+                if(dx < -threshold * limitedDist) keys['a'] = true;
+                else if(dx > threshold * limitedDist) keys['d'] = true;
+            }
         }
         
         function setupKeyboard() {
